@@ -17,14 +17,21 @@
 #include "EGLWindow.h"
 #include "EGLConfig.h"
 #include "GLES2/gl2.h"
+#include "EGL/egl.h"
 #include <cstdlib>
 #include <iostream>
 #include <cassert>
 #include <unistd.h>
 #include <fcntl.h>
 #include <cstring>
+#include <sys/ioctl.h>
+#include <stdio.h>
+#include <errno.h>
+#include <linux/fb.h>
 
-
+#include  <X11/Xlib.h>
+#include  <X11/Xatom.h>
+#include  <X11/Xutil.h>
 
 // instrument this a bit like QGLWidget by adding a
 // a context so we can choose GL version rgb size etc.
@@ -43,21 +50,49 @@ EGLWindow::EGLWindow(EGLconfig *_config)
 
  // now find the max display size (we will use this later to assert if the user
  // defined sizes are in the correct bounds
- int32_t success = 0;
- success = graphics_get_display_size(0 , &m_width, &m_height);
- assert( success >= 0 );
+ #define FBDEV_DEV "/dev/fb1"
+ int fd = open(FBDEV_DEV, O_RDWR);
+ struct fb_var_screeninfo info;
+
+ /* some lame defaults */
+ m_width = 640;
+ m_height = 480;
+
+ if (fd == -1) 
+ {
+    fprintf(stderr, "Error: failed to open %s: %s\n", FBDEV_DEV, strerror(errno));
+    return;
+ }
+ 
+ if (ioctl(fd, FBIOGET_VSCREENINFO, &info)) 
+ {
+    fprintf(stderr, "Error: failed to run ioctl on %s: %s\n", FBDEV_DEV, strerror(errno));
+    close(fd);
+    return;
+ }
+
+ close(fd);
+
+ if (info.xres && info.yres) 
+ {
+    m_width = info.xres;
+    m_height = info.yres;
+ } 
+ else
+    fprintf(stderr, "Error: FB claims 0x0 dimensions\n");
+
  std::cout<<"max width and height "<<m_width<<" "<<m_height<<"\n";
  m_maxWidth=m_width;
  m_maxHeight=m_height;
  // if we have a user defined config we will use that else we need to create one
  if (_config == 0)
  {
- 	std::cout<<"making new config\n";
-	m_config= new EGLconfig();
+    std::cout<<"making new config\n";
+    m_config= new EGLconfig();
  }
  else
  {
-		m_config=_config;
+    m_config=_config;
  }
  // this code actually creates the surface
  makeSurface(0,0,m_width,m_height);
@@ -78,10 +113,7 @@ void EGLWindow::makeSurface(uint32_t _x, uint32_t _y, uint32_t _w, uint32_t _h)
 	// this code does the main window creation
 	EGLBoolean result;
 
-	static EGL_DISPMANX_WINDOW_T nativeWindow;
-	// our source and destination rect for the screen
-	VC_RECT_T dstRect;
-	VC_RECT_T srcRect;
+        Window native_window;
 
 	// config you use OpenGL ES2.0 by default
 	static const EGLint context_attributes[] =
@@ -90,9 +122,48 @@ void EGLWindow::makeSurface(uint32_t _x, uint32_t _y, uint32_t _w, uint32_t _h)
 		EGL_NONE
 	};
 
+	XSetWindowAttributes XWinAttr;
+	Atom XWMDeleteMessage;
+	Window XRoot;
+
+	Display *XDisplay = XOpenDisplay(NULL);
+	if (!XDisplay) {
+		fprintf(stderr, "Error: failed to open X display.\n");
+		return;
+	}
+
+	XRoot = DefaultRootWindow(XDisplay);
+
+	XWinAttr.event_mask  =  ExposureMask | PointerMotionMask;
+        XWinAttr.override_redirect = True;
+
+	native_window = XCreateWindow(XDisplay, XRoot, 0, 0, _w, _h, 0,
+				CopyFromParent, InputOutput,
+				CopyFromParent, CWEventMask, &XWinAttr);
+
+	XWMDeleteMessage = XInternAtom(XDisplay, "WM_DELETE_WINDOW", False);
+
+        XEvent xev;
+        Atom wm_state   = XInternAtom(XDisplay, "_NET_WM_STATE", False);
+        Atom fullscreen = XInternAtom(XDisplay, "_NET_WM_STATE_FULLSCREEN", False);
+
+        memset(&xev, 0, sizeof(xev));
+        xev.type = ClientMessage;
+        xev.xclient.window = native_window;
+        xev.xclient.message_type = wm_state;
+        xev.xclient.format = 32;
+        xev.xclient.data.l[0] = 1;
+        xev.xclient.data.l[1] = fullscreen;
+        xev.xclient.data.l[2] = 0;
+	XMapWindow(XDisplay, native_window);
+        XSendEvent(XDisplay, DefaultRootWindow(XDisplay), False, SubstructureRedirectMask | SubstructureNotifyMask, &xev);
+        XFlush(XDisplay);
+	XStoreName(XDisplay, native_window, "oShaderToy");
+	XSetWMProtocols(XDisplay, native_window, &XWMDeleteMessage, 1);
+
 
 	// get an EGL display connection
-	m_display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+	m_display = eglGetDisplay((EGLNativeDisplayType) XDisplay);
 	if(m_display == EGL_NO_DISPLAY)
 	{
 		std::cerr<<"error getting display\n";
@@ -125,48 +196,8 @@ void EGLWindow::makeSurface(uint32_t _x, uint32_t _y, uint32_t _w, uint32_t _h)
 		std::cerr<<"couldn't get a valid context\n";
 		exit(EXIT_FAILURE);
 	}
-	// create an EGL window surface the way this works is we set the dimensions of the srec
-	// and destination rectangles.
-	// if these are the same size there is no scaling, else the window will auto scale
-
-	dstRect.x = _x;
-	dstRect.y = _y;
-	if(m_upscale == false)
-	{
-		dstRect.width = _w;
-		dstRect.height = _h;
-	}
-	else
-	{
-		dstRect.width = m_maxWidth;
-		dstRect.height = m_maxHeight;
-	}
-	srcRect.x = 0;
-	srcRect.y = 0;
-	srcRect.width = _w << 16;
-	srcRect.height = _h << 16;
-	// whilst this is mostly taken from demos I will try to explain what it does
-	// there are very few documents on this ;-0
-	// open our display with 0 being the first display, there are also some other versions
-	// of this function where we can pass in a mode however the mode is not documented as
-	// far as I can see
-  m_dispmanDisplay = vc_dispmanx_display_open(0);
-  // now we signal to the video core we are going to start updating the config
-	m_dispmanUpdate = vc_dispmanx_update_start(0);
-	// this is the main setup function where we add an element to the display, this is filled in
-	// to the src / dst rectangles
-	m_dispmanElement = vc_dispmanx_element_add ( m_dispmanUpdate, m_dispmanDisplay,
-		0, &dstRect, 0,&srcRect, DISPMANX_PROTECTION_NONE, 0 ,0,DISPMANX_NO_ROTATE);
-	// now we have created this element we pass it to the native window structure ready
-	// no create our new EGL surface
-	nativeWindow.element = m_dispmanElement;
-	nativeWindow.width =_w;
-	nativeWindow.height =_h;
-	// we now tell the vc we have finished our update
-	vc_dispmanx_update_submit_sync( m_dispmanUpdate );
-
 	// finally we can create a new surface using this config and window
-	m_surface = eglCreateWindowSurface( m_display, config, &nativeWindow, NULL );
+	m_surface = eglCreateWindowSurface( m_display, config, (NativeWindowType)native_window, NULL );
 	assert(m_surface != EGL_NO_SURFACE);
 	// connect the context to the surface
 	result = eglMakeCurrent(m_display, m_surface, m_surface, m_context);

@@ -20,8 +20,7 @@
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <GLES2/gl2.h>
-#include <bcm_host.h>
-
+#include <stdint.h>
 #include "EGLConfig.h"
 
 
@@ -93,12 +92,6 @@ class EGLWindow
 		/// @brief our config either created by the user and passed in or
 		/// a default one will be created for us
 		EGLconfig *m_config;
-		/// @brief vc display manager element
-		DISPMANX_ELEMENT_HANDLE_T m_dispmanElement;
-		/// @brief vc display manager display structure
- 		DISPMANX_DISPLAY_HANDLE_T m_dispmanDisplay;
-		/// @brief vc display manager update structure
- 		DISPMANX_UPDATE_HANDLE_T m_dispmanUpdate;
 	 private :
 	  /// @brief destroy the surface if it exists
 	 	void destroySurface();

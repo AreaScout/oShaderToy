@@ -3,12 +3,11 @@
 #include <iostream>
 #include <string>
 #include <stdlib.h>
+#include <unistd.h>
 #include "MyGLWindow.h"
-#include "bcm_host.h"
 
 int main(int argc, char ** argv)
 {
-  atexit( bcm_host_deinit);
 
   // Parse command line
   std::string fragmentShader;
@@ -20,11 +19,6 @@ int main(int argc, char ** argv)
   if (argc >= 3)
     textureName = argv[2];
 
-  // Init graphics
-  std::cout << "bcm_host_init()" << std::endl;
-  bcm_host_init();
-  std::cout << "bcm_host_init() : Done\n";
-
   EGLconfig *config = new EGLconfig();
   config->setRGBA(8,8,8,8);
   
@@ -34,6 +28,10 @@ int main(int argc, char ** argv)
 
   while(1)
   {
+    static int count = 0;
+    count++;
+    if(count == 1000)
+      break;
     win.paintGL();
     sleep(0.01);
   }
