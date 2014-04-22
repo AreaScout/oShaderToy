@@ -1,8 +1,9 @@
-pishadertoy
+oShaderToy
 ===========
-by dff180
 
-Simple console tool to test OpenGL ES 2.0 fragment shaders on the Raspberry Pi.
+Simple console tool to test OpenGL ES 2.0 fragment shaders on Ordoid boards.
+
+Changed to run on Ordoid boards by Daniel Mehrwald, inital work by dff180 for Raspberry Pi
 
 Fragment shader and optional texture are specified on command-line.
 
@@ -19,34 +20,24 @@ Credits
 
 Installation
 ------------
-Note: The following instructions are for [Raspbian Wheezy](http://www.raspberrypi.org/downloads) Raspberry Pi installs (2013-05-25-wheezy-raspbian).
-They assume that you already have set up a working development environment where you can compile the hello\_pi examples.
+Note: The following instructions are tested on the new armsoc driver from dsd
 
-1. Get sources with `git clone https://github.com/dff180/pishadertoy.git`
+1. Get sources with `git clone https://github.com/AreaScout/pishadertoy.git -b oShaderToy`
 2. Install dependencies with `sudo apt-get install libsoil-dev`
 3. `cd pishadertoy`
 4. `make`
-
-Running
--------
-* Make sure to use latest firmware and 192/64 memory split
-  * `sudo rpi-update 192`
-
-* Start from Raspberry Pi console or via SSH client 
-
-* Exit program with CTRL-C
 
 ### Examples
 
 * Using default fragment shader
 
-    `./pishadertoy`
+    `./oShaderToy`
     
 * Using fragment shader which doesn't need texture
 
-    `./pishadertoy shaders/flower.f.glsl`
+    `./oShaderToy shaders/flower.f.glsl`
     
 * Using fragment shader with texture
 
-    `./pishadertoy shaders/relieftunnel.f.glsl textures/texl2.jpg`
+    `./oShaderToy shaders/relieftunnel.f.glsl textures/texl2.jpg`
     
