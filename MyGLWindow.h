@@ -16,6 +16,7 @@ class MyGLWindow : public EGLWindow
     ~MyGLWindow();
  
     virtual void paintGL();
+    bool bIsRunning;
   protected :
   
     virtual void initializeGL();

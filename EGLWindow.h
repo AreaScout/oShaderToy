@@ -23,7 +23,9 @@
 #include <stdint.h>
 #include "EGLConfig.h"
 
-
+#include  <X11/Xlib.h>
+#include  <X11/Xatom.h>
+#include  <X11/Xutil.h>
 
 class EGLWindow
 {
@@ -43,33 +45,25 @@ class EGLWindow
 		/// @brief resize the screen with origin at 0,0
 		/// @param _w the width
 		/// @param _h the height
-		void resizeScreen(
-											 uint32_t _w,
-											 uint32_t _h
-										);
+		void resizeScreen(uint32_t _w, uint32_t _h);
 		/// @brief set screen using x,y and w/h
 		/// @param[in] _x the left origin of the screen
 		/// @param[in] _y the top origin of the screen
 		/// @param[in] _w the width  of the screen
 		/// @param[in] _h the height of the screen
-		void setScreen(
-										uint32_t _x,
-										uint32_t _y,
-										uint32_t _w,
-										uint32_t _h
-									);
+		void setScreen(uint32_t _x, uint32_t _y, uint32_t _w, uint32_t _h);
 		/// @brief get the max width
 		inline uint32_t getMaxWidth()const {return m_maxWidth;}
 		/// @brief get the  width
 		inline uint32_t getWidth()const {return m_width;}
-	/// @brief get the max width
+	        /// @brief get the max width
 		inline uint32_t getMaxHeight()const {return m_maxHeight;}
 		/// @brief get the  width
 		inline uint32_t getHeight()const {return m_height;}
 		/// @brief set the flag to upscale the screen dst rectangle.
 		/// by default this is not set
 		inline void setUpscale(bool _f){m_upscale=_f;}
-
+                Display *XDisplay;
 
 	protected :
 		/// @brief this must be implemented by the user, it is called only once when the
@@ -93,7 +87,7 @@ class EGLWindow
 		/// a default one will be created for us
 		EGLconfig *m_config;
 	 private :
-	  /// @brief destroy the surface if it exists
+	        /// @brief destroy the surface if it exists
 	 	void destroySurface();
 	 	/// @brief this is the main function to create our surface
 	 	/// @param[in] _x the left origin of the screen
@@ -101,12 +95,7 @@ class EGLWindow
 		/// @param[in] _w the width  of the screen
 		/// @param[in] _h the height of the screen
 
-	 	void makeSurface(
-	 										uint32_t _x,
-	 										uint32_t _y,
-	 										uint32_t _w,
-	 										uint32_t _h
-	 									);
+	 	void makeSurface(uint32_t _x, uint32_t _y, uint32_t _w, uint32_t _h);
 	 	/// @brief flag to indicate if the surface has been created
 	 	bool m_activeSurface;
 	 	/// @brief flag to indicate if we upscale to full screen resolution

@@ -29,10 +29,6 @@
 #include <errno.h>
 #include <linux/fb.h>
 
-#include  <X11/Xlib.h>
-#include  <X11/Xatom.h>
-#include  <X11/Xutil.h>
-
 // instrument this a bit like QGLWidget by adding a
 // a context so we can choose GL version rgb size etc.
 // This can be done with a context object at some stage.
@@ -99,14 +95,12 @@ EGLWindow::EGLWindow(EGLconfig *_config)
 
 }
 
-
 void EGLWindow::setScreen(uint32_t _x, uint32_t _y, uint32_t _w, uint32_t _h)
 {
 	// destroy our surface the make a new one
 	destroySurface();
 	makeSurface(_x,_y,_w,_h);
 }
-
 
 void EGLWindow::makeSurface(uint32_t _x, uint32_t _y, uint32_t _w, uint32_t _h)
 {
@@ -126,7 +120,7 @@ void EGLWindow::makeSurface(uint32_t _x, uint32_t _y, uint32_t _w, uint32_t _h)
 	Atom XWMDeleteMessage;
 	Window XRoot;
 
-	Display *XDisplay = XOpenDisplay(NULL);
+	XDisplay = XOpenDisplay(NULL);
 	if (!XDisplay) {
 		fprintf(stderr, "Error: failed to open X display.\n");
 		return;
@@ -134,7 +128,7 @@ void EGLWindow::makeSurface(uint32_t _x, uint32_t _y, uint32_t _w, uint32_t _h)
 
 	XRoot = DefaultRootWindow(XDisplay);
 
-	XWinAttr.event_mask  =  ExposureMask | PointerMotionMask;
+	XWinAttr.event_mask  =  ExposureMask | PointerMotionMask | KeyPressMask;
         XWinAttr.override_redirect = True;
 
 	native_window = XCreateWindow(XDisplay, XRoot, 0, 0, _w, _h, 0,
@@ -206,8 +200,6 @@ void EGLWindow::makeSurface(uint32_t _x, uint32_t _y, uint32_t _w, uint32_t _h)
 
 }
 
-
-
 void EGLWindow::destroySurface()
 {
 	if(m_activeSurface == true)
@@ -222,7 +214,6 @@ void EGLWindow::destroySurface()
 	}
 }
 
-
 EGLWindow::~EGLWindow()
 {
 	// clear screen
@@ -235,8 +226,6 @@ void EGLWindow::swapBuffers() const
 {
 	eglSwapBuffers(m_display, m_surface);
 }
-
-
 
 void EGLWindow::resizeScreen(uint32_t _w, uint32_t _h)
 {

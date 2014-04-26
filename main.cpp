@@ -6,6 +6,9 @@
 #include <unistd.h>
 #include "MyGLWindow.h"
 
+#include  <X11/Xlib.h>
+#include  <X11/Xutil.h>
+
 int main(int argc, char ** argv)
 {
 
@@ -25,15 +28,24 @@ int main(int argc, char ** argv)
   config->setDepth(16);
   
   MyGLWindow win(config, fragmentShader, textureName);
-
-  while(1)
+  win.bIsRunning = true;
+  
+  while(win.bIsRunning)
   {
-    static int count = 0;
-    count++;
-    if(count == 1000)
-      break;
+    if(XPending(win.XDisplay) > 0)
+    {
+      XEvent ev;
+      XNextEvent(win.XDisplay, &ev);
+      switch(ev.type)
+      {
+        case KeyPress:
+          win.bIsRunning = false;
+        break;
+      }
+    }    
     win.paintGL();
     sleep(0.01);
   }
+  delete config;
 }
 

@@ -107,6 +107,7 @@ void MyGLWindow::initializeGL()
 
   // Start timer
   gettimeofday(&_startTime, NULL);
+  bIsRunning = false;
 }
 
 float MyGLWindow::getDeltaTimeS()
