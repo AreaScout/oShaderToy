@@ -72,7 +72,7 @@ void EGLWindow::makeSurface(uint32_t _x, uint32_t _y)
 	// this code does the main window creation
 	EGLBoolean result;
 
-    Window native_window;
+        Window native_window;
 
 	// config you use OpenGL ES2.0 by default
 	static const EGLint context_attributes[] =
@@ -95,8 +95,8 @@ void EGLWindow::makeSurface(uint32_t _x, uint32_t _y)
 	uint32_t w = DisplayWidth(XDisplay, screen_num);
 	uint32_t h = DisplayHeight(XDisplay, screen_num);
 	
-    m_maxWidth=w;
-    m_maxHeight=h;	
+        m_maxWidth=w;
+        m_maxHeight=h;	
 	
 	XRoot = DefaultRootWindow(XDisplay);
 
@@ -108,21 +108,21 @@ void EGLWindow::makeSurface(uint32_t _x, uint32_t _y)
 
 	XWMDeleteMessage = XInternAtom(XDisplay, "WM_DELETE_WINDOW", False);
 
-    XEvent xev;
-    Atom wm_state   = XInternAtom(XDisplay, "_NET_WM_STATE", False);
-    Atom fullscreen = XInternAtom(XDisplay, "_NET_WM_STATE_FULLSCREEN", False);
+        XEvent xev;
+        Atom wm_state   = XInternAtom(XDisplay, "_NET_WM_STATE", False);
+        Atom fullscreen = XInternAtom(XDisplay, "_NET_WM_STATE_FULLSCREEN", False);
 
-    memset(&xev, 0, sizeof(xev));
-    xev.type = ClientMessage;
-    xev.xclient.window = native_window;
-    xev.xclient.message_type = wm_state;
-    xev.xclient.format = 32;
-    xev.xclient.data.l[0] = 1;
-    xev.xclient.data.l[1] = fullscreen;
-    xev.xclient.data.l[2] = 0;
+        memset(&xev, 0, sizeof(xev));
+        xev.type = ClientMessage;
+        xev.xclient.window = native_window;
+        xev.xclient.message_type = wm_state;
+        xev.xclient.format = 32;
+        xev.xclient.data.l[0] = 1;
+        xev.xclient.data.l[1] = fullscreen;
+        xev.xclient.data.l[2] = 0;
 	XMapWindow(XDisplay, native_window);
-    XSendEvent(XDisplay, DefaultRootWindow(XDisplay), False, SubstructureRedirectMask | SubstructureNotifyMask, &xev);
-    XFlush(XDisplay);
+        XSendEvent(XDisplay, DefaultRootWindow(XDisplay), False, SubstructureRedirectMask | SubstructureNotifyMask, &xev);
+        XFlush(XDisplay);
 	XStoreName(XDisplay, native_window, "oShaderToy");
 	XSetWMProtocols(XDisplay, native_window, &XWMDeleteMessage, 1);
 
