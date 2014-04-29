@@ -43,44 +43,8 @@ EGLWindow::EGLWindow(EGLconfig *_config)
  m_display=0;
  m_context=0;
  m_surface=0;
-
- // now find the max display size (we will use this later to assert if the user
- // defined sizes are in the correct bounds
- #define FBDEV_DEV "/dev/fb1"
- int fd = open(FBDEV_DEV, O_RDWR);
- struct fb_var_screeninfo info;
-
- /* some lame defaults */
- m_width = 640;
- m_height = 480;
-
- if (fd == -1) 
- {
-    fprintf(stderr, "Error: failed to open %s: %s\n", FBDEV_DEV, strerror(errno));
-    return;
- }
  
- if (ioctl(fd, FBIOGET_VSCREENINFO, &info)) 
- {
-    fprintf(stderr, "Error: failed to run ioctl on %s: %s\n", FBDEV_DEV, strerror(errno));
-    close(fd);
-    return;
- }
-
- close(fd);
-
- if (info.xres && info.yres) 
- {
-    m_width = info.xres;
-    m_height = info.yres;
- } 
- else
-    fprintf(stderr, "Error: FB claims 0x0 dimensions\n");
-
- std::cout<<"max width and height "<<m_width<<" "<<m_height<<"\n";
- m_maxWidth=m_width;
- m_maxHeight=m_height;
- // if we have a user defined config we will use that else we need to create one
+  // if we have a user defined config we will use that else we need to create one
  if (_config == 0)
  {
     std::cout<<"making new config\n";
@@ -90,8 +54,9 @@ EGLWindow::EGLWindow(EGLconfig *_config)
  {
     m_config=_config;
  }
- // this code actually creates the surface
- makeSurface(0,0,m_width,m_height);
+
+  // this code actually creates the surface
+ makeSurface(0,0);
 
 }
 
@@ -99,15 +64,15 @@ void EGLWindow::setScreen(uint32_t _x, uint32_t _y, uint32_t _w, uint32_t _h)
 {
 	// destroy our surface the make a new one
 	destroySurface();
-	makeSurface(_x,_y,_w,_h);
+	makeSurface(_x,_y);
 }
 
-void EGLWindow::makeSurface(uint32_t _x, uint32_t _y, uint32_t _w, uint32_t _h)
+void EGLWindow::makeSurface(uint32_t _x, uint32_t _y)
 {
 	// this code does the main window creation
 	EGLBoolean result;
 
-        Window native_window;
+    Window native_window;
 
 	// config you use OpenGL ES2.0 by default
 	static const EGLint context_attributes[] =
@@ -126,35 +91,40 @@ void EGLWindow::makeSurface(uint32_t _x, uint32_t _y, uint32_t _w, uint32_t _h)
 		return;
 	}
 
+	int screen_num = DefaultScreen(XDisplay);
+	uint32_t w = DisplayWidth(XDisplay, screen_num);
+	uint32_t h = DisplayHeight(XDisplay, screen_num);
+	
+    m_maxWidth=w;
+    m_maxHeight=h;	
+	
 	XRoot = DefaultRootWindow(XDisplay);
 
 	XWinAttr.event_mask  =  ExposureMask | PointerMotionMask | KeyPressMask;
-        XWinAttr.override_redirect = True;
 
-	native_window = XCreateWindow(XDisplay, XRoot, 0, 0, _w, _h, 0,
+	native_window = XCreateWindow(XDisplay, XRoot, 0, 0, w, h, 0,
 				CopyFromParent, InputOutput,
 				CopyFromParent, CWEventMask, &XWinAttr);
 
 	XWMDeleteMessage = XInternAtom(XDisplay, "WM_DELETE_WINDOW", False);
 
-        XEvent xev;
-        Atom wm_state   = XInternAtom(XDisplay, "_NET_WM_STATE", False);
-        Atom fullscreen = XInternAtom(XDisplay, "_NET_WM_STATE_FULLSCREEN", False);
+    XEvent xev;
+    Atom wm_state   = XInternAtom(XDisplay, "_NET_WM_STATE", False);
+    Atom fullscreen = XInternAtom(XDisplay, "_NET_WM_STATE_FULLSCREEN", False);
 
-        memset(&xev, 0, sizeof(xev));
-        xev.type = ClientMessage;
-        xev.xclient.window = native_window;
-        xev.xclient.message_type = wm_state;
-        xev.xclient.format = 32;
-        xev.xclient.data.l[0] = 1;
-        xev.xclient.data.l[1] = fullscreen;
-        xev.xclient.data.l[2] = 0;
+    memset(&xev, 0, sizeof(xev));
+    xev.type = ClientMessage;
+    xev.xclient.window = native_window;
+    xev.xclient.message_type = wm_state;
+    xev.xclient.format = 32;
+    xev.xclient.data.l[0] = 1;
+    xev.xclient.data.l[1] = fullscreen;
+    xev.xclient.data.l[2] = 0;
 	XMapWindow(XDisplay, native_window);
-        XSendEvent(XDisplay, DefaultRootWindow(XDisplay), False, SubstructureRedirectMask | SubstructureNotifyMask, &xev);
-        XFlush(XDisplay);
+    XSendEvent(XDisplay, DefaultRootWindow(XDisplay), False, SubstructureRedirectMask | SubstructureNotifyMask, &xev);
+    XFlush(XDisplay);
 	XStoreName(XDisplay, native_window, "oShaderToy");
 	XSetWMProtocols(XDisplay, native_window, &XWMDeleteMessage, 1);
-
 
 	// get an EGL display connection
 	m_display = eglGetDisplay((EGLNativeDisplayType) XDisplay);
@@ -230,5 +200,5 @@ void EGLWindow::swapBuffers() const
 void EGLWindow::resizeScreen(uint32_t _w, uint32_t _h)
 {
 	destroySurface();
-	makeSurface(0,0,_w,_h);
+	makeSurface(0,0);
 }

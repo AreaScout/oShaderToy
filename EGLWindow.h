@@ -95,7 +95,7 @@ class EGLWindow
 		/// @param[in] _w the width  of the screen
 		/// @param[in] _h the height of the screen
 
-	 	void makeSurface(uint32_t _x, uint32_t _y, uint32_t _w, uint32_t _h);
+	 	void makeSurface(uint32_t _x, uint32_t _y);
 	 	/// @brief flag to indicate if the surface has been created
 	 	bool m_activeSurface;
 	 	/// @brief flag to indicate if we upscale to full screen resolution

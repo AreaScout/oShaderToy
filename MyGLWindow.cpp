@@ -71,7 +71,6 @@ int MyGLWindow::init_resources()
 
 }
 
-
 void MyGLWindow::initializeGL()
 {
   init_resources();
