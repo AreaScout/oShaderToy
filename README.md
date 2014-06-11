@@ -3,7 +3,7 @@ oShaderToy
 
 Simple console tool to test OpenGL ES 2.0 fragment shaders on Ordoid boards.
 
-Changed to run on Ordoid boards by Daniel Mehrwald, inital work by dff180 for Raspberry Pi
+Changed to run on odroid boards by Daniel Mehrwald, inital work by dff180 for Raspberry Pi
 
 Fragment shader and optional texture are specified on command-line.
 
