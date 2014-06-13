@@ -22,9 +22,9 @@ Installation
 ------------
 Note: The following instructions are tested on the new armsoc driver from dsd
 
-1. Get sources with `git clone https://github.com/AreaScout/pishadertoy.git -b oShaderToy`
+1. Get sources with `git clone https://github.com/AreaScout/oShaderToy.git`
 2. Install dependencies with `sudo apt-get install libsoil-dev`
-3. `cd pishadertoy`
+3. `cd oShaderToy`
 4. `make`
 
 ### Examples
@@ -39,5 +39,5 @@ Note: The following instructions are tested on the new armsoc driver from dsd
     
 * Using fragment shader with texture
 
-    `./oShaderToy shaders/relieftunnel.f.glsl textures/texl2.jpg`
+    `./oShaderToy shaders/relieftunnel.f.glsl textures/texl0.jpg`
     
