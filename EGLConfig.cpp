@@ -62,7 +62,7 @@ void EGLconfig::chooseConfig(EGLDisplay _display)
 
 	// get an appropriate EGL frame buffer configuration
 	result = eglChooseConfig(_display, &attribs[0], &m_config, 1, &numConfig);
-	std::cout<<"got numCofig ="<<numConfig<<"\n";
+	std::cout<<"got numConfig ="<<numConfig<<"\n";
 	if( result==EGL_FALSE )
 	{
 		std::cerr<<"error setting config check your setting or if you have a valid display\n";
